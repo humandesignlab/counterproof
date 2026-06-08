@@ -25,6 +25,11 @@ coverage/
 # OS / editor
 .DS_Store
 
+# Generated synthetic artifacts (synthetic, but kept out of the tree).
+/generated/
+/data/synthetic/generated/*
+!/data/synthetic/generated/.gitkeep
+
 # Internal / AI-assisted development docs: kept local, never published.
 /AGENTS.md
 /.cursor/
