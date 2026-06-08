@@ -10,7 +10,15 @@ tool-use extractor (the product path, exercised by a gated integration test).
 """
 
 from .base import Extractor
-from .deterministic import DeterministicExtractor
+from .deterministic import (
+    MODEL_VERSION as DETERMINISTIC_MODEL_VERSION,
+)
+from .deterministic import (
+    PROMPT_VERSION as DETERMINISTIC_PROMPT_VERSION,
+)
+from .deterministic import (
+    DeterministicExtractor,
+)
 from .schema import (
     GROUNDED_CONFIDENCE,
     UNGROUNDED_CONFIDENCE,
@@ -21,6 +29,8 @@ from .schema import (
 __all__ = [
     "Extractor",
     "DeterministicExtractor",
+    "DETERMINISTIC_MODEL_VERSION",
+    "DETERMINISTIC_PROMPT_VERSION",
     "ExtractedField",
     "PaystubExtraction",
     "GROUNDED_CONFIDENCE",

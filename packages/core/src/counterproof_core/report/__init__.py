@@ -5,5 +5,28 @@ report is the SR 11-7 effective-challenge artifact: what was checked, what was
 found, the evidence, the confidence, and the recommended action, with engine,
 model, and policy versions and input hashes for reproducibility.
 
-Skeleton only in Task 1. No report logic yet.
+v1 assembles the report from extraction output with a deterministic audit trail.
+Cross-validation checks and disagreement detection populate it further later.
 """
+
+from .assemble import build_report
+from .schema import (
+    AuditEvent,
+    ChallengeReport,
+    CheckResult,
+    Classification,
+    Finding,
+    RecommendedAction,
+    Severity,
+)
+
+__all__ = [
+    "build_report",
+    "AuditEvent",
+    "ChallengeReport",
+    "CheckResult",
+    "Classification",
+    "Finding",
+    "RecommendedAction",
+    "Severity",
+]

@@ -20,6 +20,9 @@ from .schema import (
     PaystubExtraction,
 )
 
+MODEL_VERSION = "deterministic-extractor-v1"
+PROMPT_VERSION = "n/a"
+
 
 def _citation(document: Document, line_number: int) -> Citation:
     return Citation(
