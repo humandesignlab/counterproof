@@ -65,4 +65,6 @@ Early and active.
 
 ## License
 
-<!-- Open-core. Pick the core license (for example Apache-2.0 for maximum reach, or AGPL/BSL if you want a commercial-license lever) and state it here. The paid kit ships under a separate commercial license. -->
+The open-source core is licensed under the GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later). See [LICENSE](LICENSE).
+
+The paid kit is not covered by this license and ships under a separate commercial license. If the AGPL does not fit your deployment, a commercial license will be available.

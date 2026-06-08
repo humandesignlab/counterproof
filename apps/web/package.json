@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Counterproof demo UI: upload a document set, run the engine, render findings with inline citations.",
+  "license": "AGPL-3.0-or-later",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

@@ -2,6 +2,7 @@
 name = "counterproof-core"
 version = "0.1.0"
 description = "Counterproof verification engine: the independent effective-challenge pipeline."
+license = "AGPL-3.0-or-later"
 requires-python = ">=3.12"
 dependencies = [
     "pydantic==2.10.4",

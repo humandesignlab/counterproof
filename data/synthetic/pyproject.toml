@@ -2,6 +2,7 @@
 name = "counterproof-synthetic"
 version = "0.1.0"
 description = "Synthetic-only document generator and ground-truth manifests for Counterproof."
+license = "AGPL-3.0-or-later"
 requires-python = ">=3.12"
 dependencies = [
     "pydantic==2.10.4",

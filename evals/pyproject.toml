@@ -2,6 +2,7 @@
 name = "counterproof-evals"
 version = "0.1.0"
 description = "Counterproof eval harness: the proof that the challenge layer catches what the primary system misses."
+license = "AGPL-3.0-or-later"
 requires-python = ">=3.12"
 dependencies = [
     "pydantic==2.10.4",

@@ -2,6 +2,7 @@
 name = "counterproof-api"
 version = "0.1.0"
 description = "Thin FastAPI service for Counterproof: validates input, calls the engine, returns the report."
+license = "AGPL-3.0-or-later"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi==0.115.6",
