@@ -1,0 +1,49 @@
+# Counterproof Python workspace root (virtual: no top-level package).
+# Members are the engine, the API service, the eval harness, and the
+# synthetic-data package. Dev tooling is shared here.
+
+[tool.uv.workspace]
+members = [
+    "packages/core",
+    "services/api",
+    "evals",
+    "data/synthetic",
+]
+
+[tool.uv.sources]
+counterproof-core = { workspace = true }
+counterproof-synthetic = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "ruff==0.8.6",
+    "pytest==8.3.4",
+    "pyright==1.1.391",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["packages/core/src", "services/api/src", "evals/src", "data/synthetic/src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --import-mode=importlib"
+testpaths = [
+    "packages/core/tests",
+    "services/api/tests",
+    "evals/tests",
+    "data/synthetic/tests",
+]
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+include = [
+    "packages/core/src",
+    "services/api/src",
+    "evals/src",
+    "data/synthetic/src",
+]

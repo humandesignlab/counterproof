@@ -1,0 +1,16 @@
+{
+  "name": "counterproof",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Open-core independent effective-challenge layer for AI-assisted financial-document underwriting.",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "lint": "pnpm -r --if-present lint",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "build": "pnpm -r --if-present build"
+  }
+}

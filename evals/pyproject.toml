@@ -1,0 +1,16 @@
+[project]
+name = "counterproof-evals"
+version = "0.1.0"
+description = "Counterproof eval harness: the proof that the challenge layer catches what the primary system misses."
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic==2.10.4",
+    "counterproof-core",
+]
+
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/counterproof_evals"]

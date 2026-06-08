@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python (lint, types, tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.7.10"
+      - name: Install Python
+        run: uv python install 3.12
+      - name: Sync workspace
+        run: uv sync --frozen
+      - name: Lint (ruff)
+        run: uv run ruff check .
+      - name: Type check (pyright)
+        run: uv run pyright
+      - name: Tests (core, api, synthetic)
+        run: uv run pytest packages/core services/api data/synthetic
+
+  evals:
+    name: Eval harness (regression gate)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.7.10"
+      - name: Install Python
+        run: uv python install 3.12
+      - name: Sync workspace
+        run: uv sync --frozen
+      - name: Run eval harness
+        run: uv run python -m counterproof_evals
+      - name: Harness tests
+        run: uv run pytest evals
+
+  web:
+    name: Web (lint, types, tests, build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm --filter @counterproof/web lint
+      - name: Type check
+        run: pnpm --filter @counterproof/web typecheck
+      - name: Tests
+        run: pnpm --filter @counterproof/web test
+      - name: Build
+        run: pnpm --filter @counterproof/web build

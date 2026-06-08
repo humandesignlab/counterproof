@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.pyright/
+*.egg-info/
+dist/
+build/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+coverage/
+
+# Env and secrets (never commit real secrets)
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+
+# Internal / AI-assisted development docs: kept local, never published.
+/AGENTS.md
+/.cursor/
+/docs/PRD.md
+/docs/EVALS.md
+/docs/TASKS.md
+/docs/README.md
