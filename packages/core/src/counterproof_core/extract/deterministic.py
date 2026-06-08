@@ -122,4 +122,5 @@ class DeterministicExtractor:
             pay_date=_date_field(document, "Pay Date:"),
             gross_pay=_money_field(document, "Gross Pay (this period):"),
             net_pay=_money_field(document, "Net Pay (this period):"),
+            ytd_gross=_money_field(document, "YTD Gross:"),
         )

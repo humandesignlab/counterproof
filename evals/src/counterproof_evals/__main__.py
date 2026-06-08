@@ -12,15 +12,30 @@ import sys
 from .harness import run_harness
 
 
+def _format(value: float | None) -> str:
+    return "n/a" if value is None else f"{value:.3f}"
+
+
 def main() -> int:
     report = run_harness()
+    metrics = report.metrics
+    print("Counterproof eval harness")
+    print(f"  golden cases:      {metrics.golden_cases}")
+    print(f"  adversarial cases: {metrics.adversarial_cases}")
     print(
-        f"Counterproof eval harness: {report.total_cases} case(s) "
-        f"across {len(report.sets)} set(s)"
+        f"  discrepancy recall:   {_format(metrics.discrepancy_recall)} "
+        f"(min {report.thresholds.discrepancy_recall_min})"
     )
-    for summary in report.sets:
-        state = "present" if summary.present else "missing"
-        print(f"  - {summary.name}: {state}, {summary.case_count} case(s)")
+    print(
+        f"  false positive rate:  {_format(metrics.false_positive_rate)} "
+        f"(max {report.thresholds.false_positive_rate_max})"
+    )
+    print(
+        f"  grounding accuracy:   {_format(metrics.grounding_accuracy)} "
+        f"(min {report.thresholds.grounding_accuracy_min})"
+    )
+    if report.pending_sets:
+        print(f"  pending (not scored): {', '.join(report.pending_sets)}")
     if report.violations:
         print("Threshold violations:")
         for violation in report.violations:

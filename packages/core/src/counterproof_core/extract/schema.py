@@ -41,3 +41,4 @@ class PaystubExtraction(BaseModel):
     pay_date: ExtractedField[date] = Field(default_factory=ExtractedField[date])
     gross_pay: ExtractedField[float] = Field(default_factory=ExtractedField[float])
     net_pay: ExtractedField[float] = Field(default_factory=ExtractedField[float])
+    ytd_gross: ExtractedField[float] = Field(default_factory=ExtractedField[float])

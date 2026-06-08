@@ -53,13 +53,13 @@ def test_report_from_clean_paystub_is_valid_and_passes() -> None:
 def test_report_has_audit_trail_with_hashes() -> None:
     report = _report_from(SAMPLE)
     steps = [event.step for event in report.audit_trail]
-    assert steps == ["ingest", "extract", "assemble"]
+    assert steps == ["ingest", "extract", "validate", "assemble"]
     for event in report.audit_trail:
         assert len(event.input_sha256) == 64
         assert len(event.output_sha256) == 64
     # The audit trail chains: each step's input is the prior step's output.
-    assert report.audit_trail[1].input_sha256 == report.audit_trail[0].output_sha256
-    assert report.audit_trail[2].input_sha256 == report.audit_trail[1].output_sha256
+    for earlier, later in zip(report.audit_trail[:-1], report.audit_trail[1:], strict=True):
+        assert later.input_sha256 == earlier.output_sha256
 
 
 def test_report_serializes_and_round_trips() -> None:

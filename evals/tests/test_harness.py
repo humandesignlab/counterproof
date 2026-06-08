@@ -1,26 +1,40 @@
 from pathlib import Path
 
-from counterproof_evals import SET_NAMES, discover_sets, run_harness
+from counterproof_evals import PENDING_SET_NAMES, Thresholds, run_harness
 
 
-def test_discovers_all_expected_sets() -> None:
-    summaries = discover_sets()
-    discovered = {summary.name for summary in summaries}
-    assert discovered == set(SET_NAMES)
+def test_harness_meets_thresholds_with_deterministic_extractor() -> None:
+    report = run_harness(seed=1, count=12)
+    metrics = report.metrics
 
+    assert metrics.golden_cases == 12
+    assert metrics.adversarial_cases == 12
 
-def test_empty_harness_runs_green() -> None:
-    report = run_harness()
-    assert report.total_cases == 0
+    # The deterministic extractor + YTD check should catch every planted tamper,
+    # raise no false positives on clean docs, and ground every value exactly.
+    assert metrics.discrepancy_recall == 1.0
+    assert metrics.false_positive_rate == 0.0
+    assert metrics.grounding_accuracy == 1.0
+
     assert report.passed
     assert report.violations == []
 
 
-def test_counts_cases_from_manifest(tmp_path: Path) -> None:
-    golden = tmp_path / "golden"
-    golden.mkdir()
-    (golden / "manifest.json").write_text('{"cases": [{"id": "a"}, {"id": "b"}]}', encoding="utf-8")
-    report = run_harness(sets_root=tmp_path)
-    by_name = {summary.name: summary for summary in report.sets}
-    assert by_name["golden"].case_count == 2
-    assert report.total_cases == 2
+def test_pending_sets_are_reported_not_scored() -> None:
+    report = run_harness(seed=2, count=4)
+    assert set(report.pending_sets) == set(PENDING_SET_NAMES)
+
+
+def test_thresholds_flag_a_regression() -> None:
+    # An impossible recall threshold must surface as a violation, proving the gate
+    # actually fails when a metric drops below threshold.
+    impossible = Thresholds(discrepancy_recall_min=1.01)
+    report = run_harness(seed=3, count=6, thresholds=impossible)
+    assert not report.passed
+    assert any("discrepancy_recall" in violation for violation in report.violations)
+
+
+def test_work_dir_generates_both_sets(tmp_path: Path) -> None:
+    run_harness(seed=4, count=3, work_dir=tmp_path)
+    assert (tmp_path / "golden" / "manifest.json").is_file()
+    assert (tmp_path / "adversarial" / "manifest.json").is_file()

@@ -21,7 +21,8 @@ from ..score.policy import (
     overall_confidence,
     recommended_action,
 )
-from .schema import AuditEvent, ChallengeReport, Finding
+from ..validate.checks import run_checks
+from .schema import AuditEvent, ChallengeReport, CheckResult, Finding
 
 
 def _sha256(data: str) -> str:
@@ -38,6 +39,10 @@ def _hash_extractions(extractions: list[PaystubExtraction]) -> str:
 
 def _hash_findings(findings: list[Finding]) -> str:
     return _sha256("\n".join(finding.model_dump_json() for finding in findings))
+
+
+def _hash_checks(checks: list[CheckResult]) -> str:
+    return _sha256("\n".join(check.model_dump_json() for check in checks))
 
 
 def _extracted_fields(extraction: PaystubExtraction) -> list[tuple[str, ExtractedField[Any]]]:
@@ -77,6 +82,19 @@ def _findings_for(document_id: str, extraction: PaystubExtraction, policy: Polic
     return findings
 
 
+def _finding_from_failed_check(document_id: str, result: CheckResult) -> Finding:
+    return Finding(
+        field=f"{document_id}.{result.name}",
+        independent_value=None,
+        primary_value=None,
+        citations=result.citations,
+        confidence=1.0,
+        classification="material_discrepancy",
+        severity="review",
+        rationale=result.detail,
+    )
+
+
 def build_report(
     pairs: list[tuple[Document, PaystubExtraction]],
     *,
@@ -89,13 +107,22 @@ def build_report(
     documents = [document for document, _ in pairs]
     extractions = [extraction for _, extraction in pairs]
 
-    findings: list[Finding] = []
+    field_findings: list[Finding] = []
+    check_findings: list[Finding] = []
+    checks: list[CheckResult] = []
     for document, extraction in pairs:
-        findings.extend(_findings_for(document.document_id, extraction, active_policy))
+        field_findings.extend(_findings_for(document.document_id, extraction, active_policy))
+        for result in run_checks(extraction):
+            checks.append(result)
+            if result.status == "fail":
+                check_findings.append(_finding_from_failed_check(document.document_id, result))
+
+    findings = field_findings + check_findings
 
     raw_input_hash = _sha256("\n".join(document.text for document in documents))
     documents_hash = _hash_documents(documents)
     extractions_hash = _hash_extractions(extractions)
+    checks_hash = _hash_checks(checks)
     findings_hash = _hash_findings(findings)
 
     audit_trail = [
@@ -112,8 +139,14 @@ def build_report(
             detail=f"Independently extracted fields via {model_version}.",
         ),
         AuditEvent(
-            step="assemble",
+            step="validate",
             input_sha256=extractions_hash,
+            output_sha256=checks_hash,
+            detail=f"Ran {len(checks)} cross-validation check(s).",
+        ),
+        AuditEvent(
+            step="assemble",
+            input_sha256=checks_hash,
             output_sha256=findings_hash,
             detail=f"Assembled {len(findings)} finding(s) under policy {active_policy.version}.",
         ),
@@ -122,7 +155,7 @@ def build_report(
     return ChallengeReport(
         document_ids=[document.document_id for document in documents],
         findings=findings,
-        checks=[],
+        checks=checks,
         overall_confidence=overall_confidence(findings),
         recommended_action=recommended_action(findings),
         audit_trail=audit_trail,

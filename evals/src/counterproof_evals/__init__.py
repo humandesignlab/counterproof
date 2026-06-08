@@ -9,22 +9,22 @@ injection, malicious-file). Real sets, metrics, and thresholds land in T5.
 """
 
 from .harness import (
+    PENDING_SET_NAMES,
     SET_NAMES,
     HarnessReport,
-    SetSummary,
+    Metrics,
     Thresholds,
-    discover_sets,
     run_harness,
 )
 
 __version__ = "0.1.0"
 
 __all__ = [
+    "PENDING_SET_NAMES",
     "SET_NAMES",
     "HarnessReport",
-    "SetSummary",
+    "Metrics",
     "Thresholds",
-    "discover_sets",
     "run_harness",
     "__version__",
 ]

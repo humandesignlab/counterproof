@@ -59,6 +59,7 @@ class _PaystubClaims(BaseModel):
     pay_date: _FieldClaim = _FieldClaim()
     gross_pay: _FieldClaim = _FieldClaim()
     net_pay: _FieldClaim = _FieldClaim()
+    ytd_gross: _FieldClaim = _FieldClaim()
 
 
 def _clamp(confidence: float) -> float:
@@ -114,6 +115,7 @@ def _to_extraction(document: Document, claims: _PaystubClaims) -> PaystubExtract
         pay_date=_date_field(document, claims.pay_date),
         gross_pay=_money_field(document, claims.gross_pay),
         net_pay=_money_field(document, claims.net_pay),
+        ytd_gross=_money_field(document, claims.ytd_gross),
     )
 
 

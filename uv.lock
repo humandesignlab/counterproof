@@ -121,12 +121,14 @@ version = "0.1.0"
 source = { editable = "evals" }
 dependencies = [
     { name = "counterproof-core" },
+    { name = "counterproof-synthetic" },
     { name = "pydantic" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "counterproof-core", editable = "packages/core" },
+    { name = "counterproof-synthetic", editable = "data/synthetic" },
     { name = "pydantic", specifier = "==2.10.4" },
 ]
 

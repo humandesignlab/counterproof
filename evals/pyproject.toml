@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "pydantic==2.10.4",
     "counterproof-core",
+    "counterproof-synthetic",
 ]
 
 [build-system]

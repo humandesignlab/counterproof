@@ -1,42 +1,45 @@
-"""Eval harness skeleton.
+"""Eval harness.
 
-Discovers the synthetic test sets, runs the (not-yet-implemented) engine over
-them, and reports the headline metrics against committed thresholds. In Task 1
-there are no cases yet, so the harness runs green on an empty harness. The shape
-anticipates the sets defined in docs/EVALS.md:
+Generates seeded golden (clean) and adversarial (tampered) paystub sets, runs the
+engine over each case, and scores the headline metrics against committed
+thresholds. Seeded generation keeps the harness reproducible and the repo clean:
+no fixtures are committed and the same seed yields the same sets.
 
-  - golden          functional, known-good (measures false-positive rate)
-  - adversarial     functional, planted issues (measures discrepancy recall)
-  - injection       prompt-injection resistance
-  - malicious_file  hostile-file handling
-
-A manifest (manifest.json) per set will list, for every document, the true field
-values, any injected issue, and the expected classification and action. Until
-then, discovery simply reports that each set is empty.
+Scored now: discrepancy recall (adversarial), false-positive rate (golden), and
+grounding accuracy. The injection and malicious-file sets are laid out but not yet
+scored; they are reported as pending so an empty set never masquerades as a pass.
 """
 
 from __future__ import annotations
 
-import json
+import tempfile
+from datetime import date
 from pathlib import Path
-from typing import Literal, cast
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from counterproof_core.extract import (
+    DETERMINISTIC_MODEL_VERSION,
+    DETERMINISTIC_PROMPT_VERSION,
+    DeterministicExtractor,
+    ExtractedField,
+    PaystubExtraction,
+)
+from counterproof_core.ingest import Document, load_document_from_path
+from counterproof_core.report import build_report
+from counterproof_synthetic import DocumentRecord, generate_set
+
 SetName = Literal["golden", "adversarial", "injection", "malicious_file"]
-
 SET_NAMES: tuple[SetName, ...] = ("golden", "adversarial", "injection", "malicious_file")
+PENDING_SET_NAMES: tuple[SetName, ...] = ("injection", "malicious_file")
 
-DEFAULT_SETS_ROOT = Path(__file__).resolve().parents[2] / "sets"
-
-MANIFEST_FILENAME = "manifest.json"
+DEFAULT_SEED = 1
+DEFAULT_COUNT = 12
 
 
 class Thresholds(BaseModel):
-    """Committed metric thresholds. Tunable, but never silently absent.
-
-    Defaults mirror the targets in docs/EVALS.md.
-    """
+    """Committed metric thresholds (see docs/EVALS.md). Tunable, never absent."""
 
     discrepancy_recall_min: float = 0.9
     false_positive_rate_max: float = 0.1
@@ -44,16 +47,18 @@ class Thresholds(BaseModel):
     injection_resistance_min: float = 1.0
 
 
-class SetSummary(BaseModel):
-    name: SetName
-    present: bool = Field(description="Whether the set directory exists.")
-    case_count: int = Field(default=0, ge=0)
+class Metrics(BaseModel):
+    golden_cases: int = 0
+    adversarial_cases: int = 0
+    discrepancy_recall: float | None = None
+    false_positive_rate: float | None = None
+    grounding_accuracy: float | None = None
 
 
 class HarnessReport(BaseModel):
-    sets: list[SetSummary]
-    total_cases: int = Field(default=0, ge=0)
+    metrics: Metrics
     thresholds: Thresholds
+    pending_sets: list[str] = Field(default_factory=list)
     violations: list[str] = Field(default_factory=list)
 
     @property
@@ -61,54 +66,139 @@ class HarnessReport(BaseModel):
         return not self.violations
 
 
-def _count_cases(set_dir: Path) -> int:
-    """Count cases in a set from its manifest.
+def _value_text(value: object) -> str:
+    if isinstance(value, float):
+        return f"{value:.2f}"
+    if isinstance(value, date):
+        return value.isoformat()
+    return str(value)
 
-    No manifest yet means zero cases. The manifest is read as untrusted data and
-    is never executed or interpreted as instructions.
-    """
-    manifest = set_dir / MANIFEST_FILENAME
-    if not manifest.is_file():
-        return 0
-    try:
-        data: object = json.loads(manifest.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        return 0
-    if not isinstance(data, dict):
-        return 0
-    mapping = cast("dict[str, object]", data)
-    cases = mapping.get("cases")
-    if isinstance(cases, list):
-        return len(cast("list[object]", cases))
+
+def _line_number(location: str) -> int:
+    parts = location.split()
+    if len(parts) == 2 and parts[0] == "line" and parts[1].isdigit():
+        return int(parts[1])
     return 0
 
 
-def discover_sets(sets_root: Path | None = None) -> list[SetSummary]:
-    root = sets_root if sets_root is not None else DEFAULT_SETS_ROOT
-    summaries: list[SetSummary] = []
-    for name in SET_NAMES:
-        set_dir = root / name
-        present = set_dir.is_dir()
-        case_count = _count_cases(set_dir) if present else 0
-        summaries.append(SetSummary(name=name, present=present, case_count=case_count))
-    return summaries
+def _core_fields(extraction: PaystubExtraction) -> list[ExtractedField[Any]]:
+    return [
+        extraction.employee_name,
+        extraction.employer_name,
+        extraction.pay_frequency,
+        extraction.pay_period_start,
+        extraction.pay_period_end,
+        extraction.pay_date,
+        extraction.gross_pay,
+        extraction.net_pay,
+        extraction.ytd_gross,
+    ]
+
+
+def _grounding_score(document: Document, extraction: PaystubExtraction) -> tuple[int, int]:
+    """Count grounded fields whose cited line actually contains the value."""
+    correct = 0
+    total = 0
+    for field in _core_fields(extraction):
+        if field.value is None or not field.citations:
+            continue
+        total += 1
+        citation = field.citations[0]
+        line_text = document.line(_line_number(citation.location))
+        if _value_text(field.value) in line_text:
+            correct += 1
+    return correct, total
+
+
+def _evaluate_case(
+    case: DocumentRecord, set_dir: Path, extractor: DeterministicExtractor
+) -> tuple[bool, int, int]:
+    document = load_document_from_path(set_dir / case.path)
+    extraction = extractor.extract(document)
+    report = build_report(
+        [(document, extraction)],
+        model_version=DETERMINISTIC_MODEL_VERSION,
+        prompt_version=DETERMINISTIC_PROMPT_VERSION,
+    )
+    flagged = report.recommended_action != "pass"
+    correct, total = _grounding_score(document, extraction)
+    return flagged, correct, total
+
+
+def _check_thresholds(metrics: Metrics, thresholds: Thresholds) -> list[str]:
+    violations: list[str] = []
+    recall = metrics.discrepancy_recall
+    if recall is not None and recall < thresholds.discrepancy_recall_min:
+        violations.append(
+            f"discrepancy_recall {recall:.3f} < {thresholds.discrepancy_recall_min}"
+        )
+    fpr = metrics.false_positive_rate
+    if fpr is not None and fpr > thresholds.false_positive_rate_max:
+        violations.append(
+            f"false_positive_rate {fpr:.3f} > {thresholds.false_positive_rate_max}"
+        )
+    grounding = metrics.grounding_accuracy
+    if grounding is not None and grounding < thresholds.grounding_accuracy_min:
+        violations.append(
+            f"grounding_accuracy {grounding:.3f} < {thresholds.grounding_accuracy_min}"
+        )
+    return violations
+
+
+def _compute_metrics(work_dir: Path, seed: int, count: int) -> Metrics:
+    extractor = DeterministicExtractor()
+
+    golden_dir = work_dir / "golden"
+    adversarial_dir = work_dir / "adversarial"
+    golden = generate_set(golden_dir, count=count, variant="clean", seed=seed)
+    adversarial = generate_set(adversarial_dir, count=count, variant="tampered", seed=seed + 1)
+
+    grounded_correct = 0
+    grounded_total = 0
+
+    golden_flagged = 0
+    for case in golden.cases:
+        flagged, correct, total = _evaluate_case(case, golden_dir, extractor)
+        golden_flagged += 1 if flagged else 0
+        grounded_correct += correct
+        grounded_total += total
+
+    adversarial_flagged = 0
+    for case in adversarial.cases:
+        flagged, correct, total = _evaluate_case(case, adversarial_dir, extractor)
+        adversarial_flagged += 1 if flagged else 0
+        grounded_correct += correct
+        grounded_total += total
+
+    golden_n = len(golden.cases)
+    adversarial_n = len(adversarial.cases)
+    return Metrics(
+        golden_cases=golden_n,
+        adversarial_cases=adversarial_n,
+        discrepancy_recall=(adversarial_flagged / adversarial_n) if adversarial_n else None,
+        false_positive_rate=(golden_flagged / golden_n) if golden_n else None,
+        grounding_accuracy=(grounded_correct / grounded_total) if grounded_total else None,
+    )
 
 
 def run_harness(
-    sets_root: Path | None = None,
+    *,
+    seed: int = DEFAULT_SEED,
+    count: int = DEFAULT_COUNT,
     thresholds: Thresholds | None = None,
+    work_dir: Path | None = None,
 ) -> HarnessReport:
-    """Run the eval harness and return a report.
+    active_thresholds = thresholds or Thresholds()
 
-    Task 1: with no cases there is nothing to score, so no threshold can be
-    violated and the report passes. Metric computation arrives with the real sets
-    in T5; this is the seam it plugs into.
-    """
-    summaries = discover_sets(sets_root)
-    total = sum(summary.case_count for summary in summaries)
+    if work_dir is not None:
+        metrics = _compute_metrics(work_dir, seed, count)
+    else:
+        with tempfile.TemporaryDirectory(prefix="counterproof-evals-") as tmp:
+            metrics = _compute_metrics(Path(tmp), seed, count)
+
     return HarnessReport(
-        sets=summaries,
-        total_cases=total,
-        thresholds=thresholds or Thresholds(),
-        violations=[],
+        metrics=metrics,
+        thresholds=active_thresholds,
+        pending_sets=list(PENDING_SET_NAMES),
+        violations=_check_thresholds(metrics, active_thresholds),
     )

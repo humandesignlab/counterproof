@@ -80,6 +80,23 @@ def _round2(value: float) -> float:
     return round(value, 2)
 
 
+def _pick_detectable_shown_gross(rng: random.Random, true_gross: float, ytd_gross: float) -> float:
+    """Inflate per-period gross so YTD/per-period is clearly not an integer.
+
+    Keeps the planted altered_income defect honestly detectable by the engine's
+    YTD-vs-per-period check, rather than relying on a coincidental ratio.
+    """
+    for _ in range(64):
+        factor = round(rng.uniform(1.25, 1.6), 2)
+        shown = _round2(true_gross * factor)
+        if shown <= true_gross:
+            continue
+        ratio = ytd_gross / shown
+        if abs(ratio - round(ratio)) > 0.1:
+            return shown
+    return _round2(true_gross * 1.37)
+
+
 def _build_true_fields(rng: random.Random) -> PaystubFields:
     employee = f"{rng.choice(_FIRST_NAMES)} {rng.choice(_LAST_NAMES)}"
     employer = rng.choice(_EMPLOYERS)
@@ -135,8 +152,9 @@ def _build_record(
     action: RecommendedAction
 
     if tampered:
-        factor = round(rng.uniform(1.25, 1.6), 2)
-        shown_gross = _round2(true_fields.gross_pay * factor)
+        shown_gross = _pick_detectable_shown_gross(
+            rng, true_fields.gross_pay, true_fields.ytd_gross
+        )
         shown_net = _round2(shown_gross - true_fields.deductions)
         shown_annual = _round2(shown_gross * PERIODS_PER_YEAR[true_fields.pay_frequency])
         displayed = true_fields.model_copy(
