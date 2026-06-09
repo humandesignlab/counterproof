@@ -8,6 +8,7 @@ Task 1 ships the harness skeleton and the empty set layout (functional,
 injection, malicious-file). Real sets, metrics, and thresholds land in T5.
 """
 
+from .baseline import naive_recommended_action
 from .harness import (
     PENDING_SET_NAMES,
     SET_NAMES,
@@ -25,6 +26,7 @@ __all__ = [
     "HarnessReport",
     "Metrics",
     "Thresholds",
+    "naive_recommended_action",
     "run_harness",
     "__version__",
 ]
