@@ -32,10 +32,15 @@ app = FastAPI(
     description="Independent effective-challenge layer for AI underwriting.",
 )
 
-_web_origin = os.environ.get("COUNTERPROOF_WEB_ORIGIN", "http://localhost:3000")
+_default_origins = "http://localhost:3000,http://127.0.0.1:3000"
+_web_origins = [
+    origin.strip()
+    for origin in os.environ.get("COUNTERPROOF_WEB_ORIGIN", _default_origins).split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[_web_origin],
+    allow_origins=_web_origins,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
