@@ -33,10 +33,52 @@ Engineers and teams building or operating AI underwriting in lending and fintech
 
 ## Quickstart
 
-<!-- Completed during the build. Should clone, install, and run the demo on the bundled synthetic set in a few commands. -->
+Counterproof is a monorepo: a Python verification engine and FastAPI service, plus a Next.js demo UI. The demo runs on synthetic data only and needs no API key.
+
+### Prerequisites
+
+- Python 3.12+ and [uv](https://docs.astral.sh/uv/) (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
+- Node.js 20+ and pnpm (`corepack enable`)
+- git
+
+### 1. Clone and install
 
 ```bash
-# coming soon
+git clone https://github.com/humandesignlab/counterproof.git
+cd counterproof
+uv sync         # Python workspace: engine, API, evals, synthetic data
+pnpm install    # JS workspace: the demo UI
+```
+
+### 2. Run the demo (two terminals, from the repo root)
+
+Terminal 1, the API:
+
+```bash
+uv run uvicorn counterproof_api.main:app --port 8000
+```
+
+Terminal 2, the web UI:
+
+```bash
+pnpm --filter @counterproof/web dev
+```
+
+Open http://localhost:3000. Click "Load tampered sample", then "Run Counterproof": a naive single-pass read passes it, while Counterproof flags it for review and cites the exact line where the per-period income stops reconciling with the year-to-date totals. "Load clean sample" passes both. That before-and-after is the whole point.
+
+The UI calls the API at `http://localhost:8000` by default. To point it elsewhere, set `NEXT_PUBLIC_API_URL` before `pnpm ... dev`.
+
+### 3. Run the engine and evals (no UI)
+
+```bash
+uv run python -m counterproof_evals   # score the golden + adversarial sets against thresholds
+uv run pytest                         # full test suite (engine, API, evals)
+```
+
+Generate a synthetic set to inspect (synthetic data only, never real PII):
+
+```bash
+uv run python -m counterproof_synthetic --out generated/demo --count 10 --variant mixed --seed 7
 ```
 
 ## How it works
