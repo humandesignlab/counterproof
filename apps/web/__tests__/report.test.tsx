@@ -54,14 +54,30 @@ const TAMPERED_REPORT: ChallengeReport = {
   policy_version: "escalation-v1",
 };
 
-test("shows the before-and-after contrast for a tampered report", () => {
+test("shows the before-and-after verdict contrast for a tampered report", () => {
   render(<Report report={TAMPERED_REPORT} />);
   expect(screen.getByText("Naive single-pass")).toBeDefined();
-  expect(screen.getByRole("status").textContent).toContain("Counterproof caught");
+  expect(screen.getByText("Counterproof")).toBeDefined();
+  // Naive passes, Counterproof flags it.
+  expect(screen.getByText("PASS")).toBeDefined();
+  expect(screen.getByText("REVIEW")).toBeDefined();
 });
 
-test("renders the failing check with its citation", () => {
+test("raises a real alert that the naive read would have missed it", () => {
   render(<Report report={TAMPERED_REPORT} />);
-  expect(screen.getByText("ytd_vs_per_period")).toBeDefined();
+  const alert = screen.getByRole("status");
+  expect(alert.textContent).toContain("Discrepancy found");
+  expect(alert.textContent).toContain("naive single-pass read would pass");
+});
+
+test("presents the failing check as evidence with its cited source line", () => {
+  render(<Report report={TAMPERED_REPORT} />);
+  expect(screen.getByText(/not an integer multiple/)).toBeDefined();
+  expect(screen.getByText("check: ytd_vs_per_period")).toBeDefined();
   expect(screen.getByText("YTD Gross: 8400.00")).toBeDefined();
+});
+
+test("moves extracted fields behind a disclosure instead of a wall", () => {
+  render(<Report report={TAMPERED_REPORT} />);
+  expect(screen.getByText(/Extracted fields \(1\)/)).toBeDefined();
 });

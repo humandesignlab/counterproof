@@ -1,3 +1,49 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  /* Instrument palette: calm near-black canvas, one elevated surface, hairline borders. */
+  --bg: #0a0c10;
+  --surface: #111419;
+  --border: #232a33;
+
+  --text: #e8ebef;
+  --text-muted: #98a2ae;
+  --text-faint: #828b98;
+
+  /* Accent reserved for the primary action: a muted instrument teal, deliberately
+     apart from the pass-green (status) and the generic SaaS blue. */
+  --accent: #2f9e9b;
+  --accent-hover: #38b3af;
+  --accent-fg: #04110f;
+
+  /* Semantic status. Each is paired with a shape + label in the UI, never color alone. */
+  --status-pass: #56d68a;
+  --status-pass-bg: rgba(86, 214, 138, 0.12);
+  --status-pass-line: rgba(86, 214, 138, 0.32);
+
+  --status-review: #e8b54d;
+  --status-review-bg: rgba(232, 181, 77, 0.12);
+  --status-review-line: rgba(232, 181, 77, 0.34);
+
+  --status-fail: #ec6a6a;
+  --status-fail-bg: rgba(236, 106, 106, 0.12);
+  --status-fail-line: rgba(236, 106, 106, 0.34);
+}
+
+@layer base {
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: rgba(47, 158, 155, 0.3);
+  }
+}
