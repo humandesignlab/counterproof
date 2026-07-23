@@ -1,0 +1,27 @@
+# Keep the build context small and free of local/build artifacts.
+.git
+.github
+.venv
+**/.venv
+**/__pycache__
+**/*.pyc
+.ruff_cache
+.pytest_cache
+.mypy_cache
+.pyright
+
+# JS build + deps (the API image does not need the web app)
+node_modules
+**/node_modules
+apps/web/.next
+apps/web/out
+
+# Generated synthetic artifacts and local env
+generated
+data/synthetic/generated
+.env
+.env.*
+!.env.example
+
+# OS/editor
+.DS_Store

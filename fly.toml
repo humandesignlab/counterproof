@@ -1,0 +1,32 @@
+# Fly.io config for the Counterproof API (Docker).
+#
+# Scale-to-zero to stay near-free: the machine stops when idle and wakes on the
+# next request. Synthetic-only demo, no persistence, no secrets in this file.
+# Runtime config (COUNTERPROOF_WEB_ORIGIN, COUNTERPROOF_WEB_ORIGIN_REGEX) is set
+# via `fly secrets`/env at deploy time, not committed here.
+#
+# The app name may need to be unique across Fly; adjust if `counterproof-api` is
+# taken. Region is a default; change to one near you.
+
+app = "counterproof-api"
+primary_region = "iad"
+
+[build]
+  dockerfile = "services/api/Dockerfile"
+
+[env]
+  PORT = "8000"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    method = "GET"
+    path = "/health"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "10s"

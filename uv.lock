@@ -96,25 +96,23 @@ source = { editable = "services/api" }
 dependencies = [
     { name = "counterproof-core" },
     { name = "fastapi" },
+    { name = "uvicorn" },
 ]
 
 [package.dev-dependencies]
 dev = [
     { name = "httpx" },
-    { name = "uvicorn" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "counterproof-core", editable = "packages/core" },
     { name = "fastapi", specifier = "==0.115.6" },
+    { name = "uvicorn", specifier = "==0.34.0" },
 ]
 
 [package.metadata.requires-dev]
-dev = [
-    { name = "httpx", specifier = "==0.28.1" },
-    { name = "uvicorn", specifier = "==0.34.0" },
-]
+dev = [{ name = "httpx", specifier = "==0.28.1" }]
 
 [[package]]
 name = "counterproof-core"
