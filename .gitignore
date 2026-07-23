@@ -25,6 +25,9 @@ coverage/
 # OS / editor
 .DS_Store
 
+# Vercel CLI project link
+.vercel
+
 # Generated synthetic artifacts (synthetic, but kept out of the tree).
 /generated/
 /data/synthetic/generated/*
