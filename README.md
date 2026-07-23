@@ -2,6 +2,8 @@
 
 **The independent effective-challenge layer for AI underwriting.**
 
+**[Try the live demo](https://counterproof-web.vercel.app).** Load the tampered paystub, click Run, and watch Counterproof flag the planted income discrepancy with a citation while a naive single-pass read waves it through. No install, synthetic data only.
+
 Counterproof is an open-core verification layer that runs alongside any AI underwriting pipeline and gives you a transparent second opinion. It independently re-derives the figures that drive a lending decision, grounds each one in a citation, cross-checks the documents against each other, flags where it disagrees with the primary system, and produces an auditable challenge report. It never makes the decision. A human underwriter stays accountable.
 
 <!-- badges: license, CI status, PyPI/npm. Add once the scaffold and CI exist. -->
@@ -33,7 +35,14 @@ Engineers and teams building or operating AI underwriting in lending and fintech
 
 ## Quickstart
 
-Counterproof is a monorepo: a Python verification engine and FastAPI service, plus a Next.js demo UI. The demo runs on synthetic data only and needs no API key.
+The fastest way to see it, no install required, is the hosted demo:
+
+- Live demo: https://counterproof-web.vercel.app
+- API: https://counterproof-api.fly.dev (`/health`, `/verify`)
+
+Load the tampered sample and click Run to see the flagged discrepancy and its citation, next to what a naive single-pass read concludes.
+
+To read and run the code, clone and run it locally. Counterproof is a monorepo: a Python verification engine and FastAPI service, plus a Next.js demo UI. The demo runs on synthetic data only and needs no API key.
 
 ### Prerequisites
 
