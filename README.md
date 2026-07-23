@@ -16,7 +16,7 @@ Counterproof is that challenge, as code: an independent reader that checks the p
 
 ## See it work
 
-<!-- Replace with a short GIF of the demo once built. -->
+[![Counterproof catching a tampered paystub that a naive single-pass read passes](docs/counterproof-demo.gif)](https://counterproof-web.vercel.app)
 
 Feed in a clean document set and Counterproof passes it. Plant a discrepancy, an altered income figure, or a paystub that does not reconcile with the bank deposits, and Counterproof catches it, flags it, and cites the exact location, while a naive single-pass read waves it through. That before-and-after is the whole point.
 

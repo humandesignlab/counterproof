@@ -12,6 +12,10 @@
     "lint": "pnpm -r --if-present lint",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
-    "build": "pnpm -r --if-present build"
+    "build": "pnpm -r --if-present build",
+    "capture:demo": "node scripts/capture-demo.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.61.1"
   }
 }
