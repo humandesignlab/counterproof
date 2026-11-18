@@ -120,4 +120,4 @@ The open-source core is licensed under the GNU Affero General Public License v3.
 
 The paid kit is not covered by this license and ships under a separate commercial license. If the AGPL does not fit your deployment, a commercial license will be available.
 
-Built by Humberto Mangino. **[LinkedIn: linkedin.com/in/humbertomangino](https://www.linkedin.com/in/humbertomangino)**
+Built by Humberto Mangino. **[LinkedIn:](https://www.linkedin.com/in/humbertomangino)  linkedin.com/in/humbertomangino**
