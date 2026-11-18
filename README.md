@@ -6,8 +6,6 @@
 
 Counterproof is an open-core verification layer that runs alongside any AI underwriting pipeline and gives you a transparent second opinion. It independently re-derives the figures that drive a lending decision, grounds each one in a citation, cross-checks the documents against each other, flags where it disagrees with the primary system, and produces an auditable challenge report. It never makes the decision. A human underwriter stays accountable.
 
-<!-- badges: license, CI status, PyPI/npm. Add once the scaffold and CI exist. -->
-
 ## Why this exists
 
 An AI underwriting system that validates its own inputs forms a closed loop that cannot catch its own errors or fraud. The industry calls this Verification Collapse. US model-risk guidance (SR 11-7) addresses it head on: it requires "effective challenge," an independent, critical review of a model's outputs, and it applies to vendor models too, not just in-house ones.
